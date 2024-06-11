@@ -1,6 +1,6 @@
 import random
 import numpy as np
-import os
+
 
 def generate_testcase(k):
     total_customers = random.randint(10,20)
