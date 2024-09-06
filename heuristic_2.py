@@ -8,40 +8,50 @@ def read_input_data():
     n_customers, n_cs = map(int, lines[0].strip().split())
     customers = []
     for i in range(1, n_customers + 1):
+       
         cid, payload, deadline = map(float, lines[i].strip().split())
         customers.append({'id': int(cid), 'payload': payload, 'deadline': deadline})
     
     dist_matrix = []
+   
     for line in lines[n_customers + 1:]:
         dist_matrix.append(list(map(float, line.strip().split())))
     
     return n_customers, n_cs, customers, np.array(dist_matrix)
+
+
 
 # Get drone specifications
 def read_drone_specs():
     with open('drone_specs.txt', 'r') as file:
         lines = file.readlines()
     
+  
     max_payload = float(lines[0].strip())
     speed = float(lines[1].strip())
     battery_capacity = float(lines[2].strip())
+   
     energy_consumption_rate = float(lines[3].strip())
     discharge_rate = float(lines[4].strip())
     
     return max_payload, speed, battery_capacity, energy_consumption_rate, discharge_rate
 
+
 # Group customers into clusters
 def cluster_customers(customers, n_clusters, max_payload):
     sorted_customers = sorted(customers, key=lambda x: (x['deadline'], x['payload']))
+   
     clusters = [[] for _ in range(n_clusters)]
     current_payloads = [0] * n_clusters
     
     for customer in sorted_customers:
         for i in range(n_clusters):
+          
             if current_payloads[i] + customer['payload'] <= max_payload:
                 clusters[i].append(customer)
                 current_payloads[i] += customer['payload']
                 break
+       
         else:
             for i in range(n_clusters):
                 if len(clusters[i]) == 0:
@@ -49,8 +59,11 @@ def cluster_customers(customers, n_clusters, max_payload):
                     current_payloads[i] += customer['payload']
                     break
 
+
+
     # Balance cluster sizes
     while True:
+       
         max_size = max(len(cluster) for cluster in clusters)
         min_size = min(len(cluster) for cluster in clusters)
         if max_size - min_size <= 1:
@@ -73,14 +86,21 @@ def cluster_customers(customers, n_clusters, max_payload):
     drone_assignment = {i: clusters[i] for i in range(n_clusters)}
     return drone_assignment
 
+
+
 # Finding nearest charging station
 def nearest_cs(curr_location, dist_matrix, charging_stations):
     closest_cs = min(charging_stations, key=lambda cs: dist_matrix[curr_location][cs])
     return closest_cs
 
+
+
 # Function to calculate delivery time
 def calculate_delivery_time(distance, speed):
     return (distance / speed) * 60 
+
+
+
 
 # Create routes and calculate delivery times
 def create_routes(drone_assignments, dist_matrix, battery_capacity, energy_consumption_rate, charging_stations, speed):
@@ -89,6 +109,7 @@ def create_routes(drone_assignments, dist_matrix, battery_capacity, energy_consu
     for drone_id, customers in drone_assignments.items():
         battery = battery_capacity
         total_time = 0  # Total delivery time
+       
         route = []
         last_location = 0  # Start from the depot
         
@@ -126,6 +147,8 @@ def create_routes(drone_assignments, dist_matrix, battery_capacity, energy_consu
     
     return route_plans
 
+
+
 # Main Code
 n_customers, n_cs, customers, dist_matrix = read_input_data()
 max_payload, speed, battery_capacity, energy_consumption_rate, discharge_rate = read_drone_specs()
@@ -135,10 +158,15 @@ num_drones = 5
 charging_stations = list(range(n_customers + 1, n_customers + 1 + n_cs))
 drone_assignments = cluster_customers(customers, num_drones, max_payload)
 
+
+
+
 # Print clusters and payloads
 for drone_id, cluster in drone_assignments.items():
     print(f"Drone {drone_id + 1}: {[cust['id'] for cust in cluster]} with total payload {sum(cust['payload'] for cust in cluster)}")
 print("\n")
+
+
 
 # Generate and print routes
 routes = create_routes(drone_assignments, dist_matrix, battery_capacity, energy_consumption_rate, charging_stations, speed)
